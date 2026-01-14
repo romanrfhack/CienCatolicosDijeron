@@ -160,46 +160,46 @@ function render() {
 }
 
 function renderAnswers(question) {
-  const answers = [...question.answers];
+  const answers = [...(question.answers || [])];
   while (answers.length < 5) {
     answers.push({ text: "", points: 0 });
   }
 
   elements.answersGrid.innerHTML = "";
   answers.slice(0, 5).forEach((answer, index) => {
-    const card = document.createElement("button");
-    card.type = "button";
-    card.className = "answer-card";
+    const row = document.createElement("button");
+    row.type = "button";
+    row.className = "answer-row";
     if (state.revealedAnswers[index]) {
-      card.classList.add("revealed");
+      row.classList.add("revealed");
     }
-    card.addEventListener("click", () => toggleAnswer(index));
+    row.disabled = state.stealMode;
+    row.addEventListener("click", () => toggleAnswer(index));
 
-    const inner = document.createElement("div");
-    inner.className = "answer-card__inner";
+    const num = document.createElement("div");
+    num.className = "answer-row__num";
+    num.textContent = `${index + 1}.`;
 
-    const front = document.createElement("div");
-    front.className = "answer-card__face answer-card__face--front";
-    front.textContent = index + 1;
-
-    const back = document.createElement("div");
-    back.className = "answer-card__face answer-card__face--back";
+    const content = document.createElement("div");
+    content.className = "answer-row__content";
 
     const text = document.createElement("div");
-    text.className = "answer-card__text";
+    text.className = "answer-row__text";
     text.textContent = answer.text || "Respuesta";
 
+    const fill = document.createElement("div");
+    fill.className = "answer-row__fill";
+    fill.setAttribute("aria-hidden", "true");
+
     const points = document.createElement("div");
-    points.className = "answer-card__points";
-    points.textContent = answer.points ? `${answer.points}` : "0";
+    points.className = "answer-row__points";
+    const safePoints = Math.max(0, Number(answer.points) || 0);
+    points.textContent = String(safePoints);
 
-    back.append(text, points);
-    inner.append(front, back);
-    card.append(inner);
+    content.append(text, fill, points);
+    row.append(num, content);
 
-    card.disabled = state.stealMode;
-
-    elements.answersGrid.append(card);
+    elements.answersGrid.append(row);
   });
 }
 

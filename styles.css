@@ -10,6 +10,7 @@
   --text: #f5f7fa;
   --muted: #9bb0c9;
   --shadow: rgba(0, 0, 0, 0.4);
+  --curtain-image: url("assets/intro.jpg");
 }
 
 * {
@@ -23,6 +24,23 @@ body {
   background: radial-gradient(circle at top, #1f2c3a 0%, var(--bg) 65%);
   color: var(--text);
   min-height: 100vh;
+}
+
+.curtain {
+  position: fixed;
+  inset: 0;
+  background: #05080d var(--curtain-image) center / cover no-repeat;
+  opacity: 0;
+  transform: scale(1.04);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.curtain.curtain--visible {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: all;
 }
 
 .app {

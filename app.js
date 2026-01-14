@@ -76,6 +76,8 @@ const elements = {
 const questions = Array.isArray(QUESTIONS_DATA?.questions) ? QUESTIONS_DATA.questions : [];
 let curtainTimer = null;
 
+normalizeStateWithQuestions();
+
 init();
 
 function init() {
@@ -141,6 +143,9 @@ function setViewMode(mode, { skipSound = false } = {}) {
   const normalized = ["normal", "question", "board"].includes(mode) ? mode : "normal";
   const prevMode = state.viewMode;
   state.viewMode = state.started ? normalized : "normal";
+  if (state.viewMode !== "question") {
+    hideCurtain();
+  }
   updateViewModeUI();
   if (!skipSound && state.viewMode === "board" && prevMode !== "board") {
     audioManager.play("reveal");
@@ -509,6 +514,35 @@ function isEditableTarget(target) {
 
 function getOppositeTeam(team) {
   return team === "A" ? "B" : "A";
+}
+
+
+function normalizeStateWithQuestions() {
+  // Ensure index is valid for the current QUESTIONS_DATA (common issue after editing questions.js)
+  if (!Number.isInteger(state.currentQuestionIndex)) {
+    state.currentQuestionIndex = 0;
+  }
+  if (state.currentQuestionIndex < 0) {
+    state.currentQuestionIndex = 0;
+  }
+  if (questions.length > 0 && state.currentQuestionIndex >= questions.length) {
+    state.currentQuestionIndex = 0;
+  }
+
+  // Always enforce exactly 5 reveal slots (board is fixed to 5 answers)
+  const prev = Array.isArray(state.revealedAnswers) ? state.revealedAnswers : [];
+  state.revealedAnswers = Array.from({ length: 5 }, (_, i) => Boolean(prev[i]));
+
+  // Defensive defaults for enums (avoid breaking UI if storage has unexpected values)
+  if (!["A", "B"].includes(state.activeTeam)) {
+    state.activeTeam = "A";
+  }
+  if (!["A", "B"].includes(state.roundOwnerTeam)) {
+    state.roundOwnerTeam = state.activeTeam;
+  }
+  if (!["normal", "question", "board"].includes(state.viewMode)) {
+    state.viewMode = "normal";
+  }
 }
 
 function loadState() {

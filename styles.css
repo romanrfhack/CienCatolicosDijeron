@@ -29,7 +29,9 @@ body {
 .curtain {
   position: fixed;
   inset: 0;
-  background: #05080d var(--curtain-image) center / cover no-repeat;
+  background: 
+    linear-gradient(rgba(5, 8, 13, 0.7), rgba(5, 8, 13, 0.7)),
+    var(--curtain-image) center / cover no-repeat;
   opacity: 0;
   transform: scale(1.04);
   transition: opacity 0.6s ease, transform 0.6s ease;

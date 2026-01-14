@@ -445,7 +445,7 @@ function showCurtain({ autoHide = false } = {}) {
   if (autoHide) {
     curtainTimer = setTimeout(() => {
       hideCurtain();
-    }, 1300);
+    }, 5000);
   }
 }
 

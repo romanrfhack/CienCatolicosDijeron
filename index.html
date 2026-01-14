@@ -8,6 +8,13 @@
   </head>
   <body>
     <div id="curtain" class="curtain" aria-hidden="true"></div>
+    <div id="fullscreenOverlay" class="fullscreen-overlay" hidden>
+      <div class="fullscreen-card">
+        <div id="fullscreenIntro" class="fullscreen-intro"></div>
+        <div id="fullscreenQuestion" class="fullscreen-question"></div>
+        <div id="fullscreenHint" class="fullscreen-hint"></div>
+      </div>
+    </div>
     <div class="app">
       <header class="app__header">
         <div>
@@ -49,6 +56,7 @@
       <section id="gameScreen" class="screen screen--game hidden">
         <div class="board">
           <div class="board__question" id="questionText">Pregunta</div>
+          <div id="boardHint" class="board__hint">V o ESC para regresar</div>
           <div class="board__answers" id="answersGrid"></div>
           <div class="board__round">
             <div>
@@ -120,6 +128,15 @@
                 <span>Volumen</span>
                 <input id="volumeSliderGame" type="range" min="0" max="100" value="70" />
               </label>
+            </div>
+          </div>
+
+          <div class="control__group">
+            <h4>Pantalla</h4>
+            <div class="control__row">
+              <button id="showQuestionMode" class="btn">Mostrar pregunta (Q)</button>
+              <button id="toggleBoardMode" class="btn">Maximizar tablero (V)</button>
+              <button id="exitFullscreenMode" class="btn">Regresar (ESC)</button>
             </div>
           </div>
         </aside>

@@ -85,6 +85,10 @@ function init() {
   elements.volumeSlider.value = Math.round(state.audio.volume * 100);
   elements.volumeSliderGame.value = Math.round(state.audio.volume * 100);
 
+  if (!state.started) {
+    state.viewMode = "normal";
+  }
+
   elements.startGame.addEventListener("click", handleStart);
   elements.setTeamA.addEventListener("click", () => setActiveTeam("A"));
   elements.setTeamB.addEventListener("click", () => setActiveTeam("B"));
@@ -107,10 +111,10 @@ function init() {
     syncAudioUI();
     saveState();
   });
-  elements.showQuestionMode.addEventListener("click", () => setViewMode("question"));
-  elements.toggleBoardMode.addEventListener("click", () => toggleBoardMode());
-  elements.exitFullscreenMode.addEventListener("click", () => setViewMode("normal"));
-  elements.fullscreenOverlay.addEventListener("click", () => {
+  elements.showQuestionMode?.addEventListener("click", () => setViewMode("question"));
+  elements.toggleBoardMode?.addEventListener("click", () => toggleBoardMode());
+  elements.exitFullscreenMode?.addEventListener("click", () => setViewMode("normal"));
+  elements.fullscreenOverlay?.addEventListener("click", () => {
     if (state.viewMode === "question") {
       setViewMode("board");
     }
@@ -136,7 +140,7 @@ function handleStart() {
 function setViewMode(mode, { skipSound = false } = {}) {
   const normalized = ["normal", "question", "board"].includes(mode) ? mode : "normal";
   const prevMode = state.viewMode;
-  state.viewMode = normalized;
+  state.viewMode = state.started ? normalized : "normal";
   updateViewModeUI();
   if (!skipSound && state.viewMode === "board" && prevMode !== "board") {
     audioManager.play("reveal");

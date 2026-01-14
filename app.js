@@ -28,6 +28,7 @@ const audioManager = createAudioManager();
 const elements = {
   configScreen: document.getElementById("configScreen"),
   gameScreen: document.getElementById("gameScreen"),
+  curtain: document.getElementById("curtain"),
   teamAInput: document.getElementById("teamAInput"),
   teamBInput: document.getElementById("teamBInput"),
   startGame: document.getElementById("startGame"),
@@ -65,6 +66,7 @@ const elements = {
 };
 
 const questions = Array.isArray(QUESTIONS_DATA?.questions) ? QUESTIONS_DATA.questions : [];
+let curtainTimer = null;
 
 init();
 
@@ -109,6 +111,7 @@ function handleStart() {
   state.started = true;
   state.roundOwnerTeam = state.activeTeam;
   audioManager.play("intro", { once: true });
+  showCurtain({ autoHide: true });
   saveState();
   render();
 }
@@ -319,6 +322,7 @@ function changeQuestion(delta) {
   }
   resetRound();
   state.currentQuestionIndex = nextIndex;
+  showCurtain({ autoHide: true });
   saveState();
   render();
 }
@@ -396,6 +400,9 @@ function handleKeyDown(event) {
     case "u":
       resolveSteal(false);
       break;
+    case "i":
+      toggleCurtain();
+      break;
     default:
       break;
   }
@@ -426,6 +433,39 @@ function loadState() {
 
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function showCurtain({ autoHide = false } = {}) {
+  if (!elements.curtain) {
+    return;
+  }
+  elements.curtain.classList.add("curtain--visible");
+  elements.curtain.setAttribute("aria-hidden", "false");
+  clearTimeout(curtainTimer);
+  if (autoHide) {
+    curtainTimer = setTimeout(() => {
+      hideCurtain();
+    }, 1300);
+  }
+}
+
+function hideCurtain() {
+  if (!elements.curtain) {
+    return;
+  }
+  elements.curtain.classList.remove("curtain--visible");
+  elements.curtain.setAttribute("aria-hidden", "true");
+}
+
+function toggleCurtain() {
+  if (!elements.curtain) {
+    return;
+  }
+  if (elements.curtain.classList.contains("curtain--visible")) {
+    hideCurtain();
+  } else {
+    showCurtain({ autoHide: false });
+  }
 }
 
 function createAudioManager() {

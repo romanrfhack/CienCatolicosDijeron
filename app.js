@@ -19,7 +19,8 @@ const DEFAULT_STATE = {
   scores: { A: 0, B: 0 },
   teamNames: { A: "Equipo A", B: "Equipo B" },
   audio: { enabled: true, volume: 0.7 },
-  started: false
+  started: false,
+  viewMode: "normal"
 };
 
 const state = loadState();
@@ -62,7 +63,14 @@ const elements = {
   volumeSlider: document.getElementById("volumeSlider"),
   testSound: document.getElementById("testSound"),
   toggleAudio: document.getElementById("toggleAudio"),
-  volumeSliderGame: document.getElementById("volumeSliderGame")
+  volumeSliderGame: document.getElementById("volumeSliderGame"),
+  fullscreenOverlay: document.getElementById("fullscreenOverlay"),
+  fullscreenIntro: document.getElementById("fullscreenIntro"),
+  fullscreenQuestion: document.getElementById("fullscreenQuestion"),
+  fullscreenHint: document.getElementById("fullscreenHint"),
+  showQuestionMode: document.getElementById("showQuestionMode"),
+  toggleBoardMode: document.getElementById("toggleBoardMode"),
+  exitFullscreenMode: document.getElementById("exitFullscreenMode")
 };
 
 const questions = Array.isArray(QUESTIONS_DATA?.questions) ? QUESTIONS_DATA.questions : [];
@@ -99,9 +107,18 @@ function init() {
     syncAudioUI();
     saveState();
   });
+  elements.showQuestionMode.addEventListener("click", () => setViewMode("question"));
+  elements.toggleBoardMode.addEventListener("click", () => toggleBoardMode());
+  elements.exitFullscreenMode.addEventListener("click", () => setViewMode("normal"));
+  elements.fullscreenOverlay.addEventListener("click", () => {
+    if (state.viewMode === "question") {
+      setViewMode("board");
+    }
+  });
 
   document.addEventListener("keydown", handleKeyDown);
 
+  setViewMode(state.viewMode, { skipSound: true });
   render();
 }
 
@@ -114,6 +131,41 @@ function handleStart() {
   showCurtain({ autoHide: true });
   saveState();
   render();
+}
+
+function setViewMode(mode, { skipSound = false } = {}) {
+  const normalized = ["normal", "question", "board"].includes(mode) ? mode : "normal";
+  const prevMode = state.viewMode;
+  state.viewMode = normalized;
+  updateViewModeUI();
+  if (!skipSound && state.viewMode === "board" && prevMode !== "board") {
+    audioManager.play("reveal");
+  }
+  saveState();
+  render();
+}
+
+function toggleBoardMode() {
+  setViewMode(state.viewMode === "board" ? "normal" : "board");
+}
+
+function updateViewModeUI() {
+  document.body.classList.toggle("mode-question", state.viewMode === "question");
+  document.body.classList.toggle("mode-board", state.viewMode === "board");
+  if (elements.fullscreenOverlay) {
+    elements.fullscreenOverlay.hidden = state.viewMode !== "question";
+  }
+  updateFullscreenOverlay();
+}
+
+function updateFullscreenOverlay() {
+  if (!elements.fullscreenOverlay || state.viewMode !== "question") {
+    return;
+  }
+  const question = questions[state.currentQuestionIndex];
+  elements.fullscreenIntro.textContent = "5 Respuestas en el tablero. Traten de darme la más popular";
+  elements.fullscreenQuestion.textContent = question?.prompt || "Sin pregunta cargada.";
+  elements.fullscreenHint.textContent = "Clic o ESPACIO/ENTER para ver el tablero";
 }
 
 function render() {
@@ -160,6 +212,7 @@ function render() {
   elements.stealTeam.textContent = state.stealMode ? getOppositeTeam(state.roundOwnerTeam) : "";
 
   syncAudioUI();
+  updateViewModeUI();
 }
 
 function renderAnswers(question) {
@@ -323,8 +376,7 @@ function changeQuestion(delta) {
   resetRound();
   state.currentQuestionIndex = nextIndex;
   showCurtain({ autoHide: true });
-  saveState();
-  render();
+  setViewMode("question");
 }
 
 function resetGame() {
@@ -362,7 +414,42 @@ function syncAudioUI() {
 }
 
 function handleKeyDown(event) {
+  if (isEditableTarget(event.target)) {
+    return;
+  }
+
   const key = event.key.toLowerCase();
+
+  if (key === "escape") {
+    setViewMode("normal");
+    return;
+  }
+
+  if (key === "q") {
+    setViewMode(state.viewMode === "question" ? "board" : "question");
+    return;
+  }
+
+  if (key === "v") {
+    toggleBoardMode();
+    return;
+  }
+
+  if ((event.code === "Space" || key === " ") && state.viewMode === "question") {
+    event.preventDefault();
+    setViewMode("board");
+    return;
+  }
+
+  if (key === "enter" && state.viewMode === "question") {
+    event.preventDefault();
+    setViewMode("board");
+    return;
+  }
+
+  if (state.viewMode === "question") {
+    return;
+  }
 
   if (key >= "1" && key <= "5") {
     toggleAnswer(Number(key) - 1);
@@ -406,6 +493,14 @@ function handleKeyDown(event) {
     default:
       break;
   }
+}
+
+function isEditableTarget(target) {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+  const tag = target.tagName;
+  return target.isContentEditable || tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
 }
 
 function getOppositeTeam(team) {

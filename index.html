@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>100 Católicos Dijeron - San Sebastián 2026</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="app__header">
+        <div>
+          <h1>100 Católicos Dijeron</h1>
+          <p class="subtitle">San Sebastián 2026</p>
+        </div>
+        <div class="header__meta">
+          <span id="questionCounter">Pregunta 1</span>
+          <button id="resetGame" class="btn btn--danger">Reset juego</button>
+        </div>
+      </header>
+
+      <section id="configScreen" class="screen screen--config">
+        <h2>Configuración inicial</h2>
+        <div class="config__fields">
+          <label>
+            Equipo A
+            <input id="teamAInput" type="text" placeholder="Equipo A" />
+          </label>
+          <label>
+            Equipo B
+            <input id="teamBInput" type="text" placeholder="Equipo B" />
+          </label>
+        </div>
+        <div class="config__audio">
+          <label class="toggle">
+            <input id="audioToggle" type="checkbox" checked />
+            <span>Audio ON/OFF</span>
+          </label>
+          <label>
+            Volumen
+            <input id="volumeSlider" type="range" min="0" max="100" value="70" />
+          </label>
+          <button id="testSound" class="btn">Probar sonido</button>
+        </div>
+        <button id="startGame" class="btn btn--primary">Iniciar</button>
+      </section>
+
+      <section id="gameScreen" class="screen screen--game hidden">
+        <div class="board">
+          <div class="board__question" id="questionText">Pregunta</div>
+          <div class="board__answers" id="answersGrid"></div>
+          <div class="board__round">
+            <div>
+              <span>Puntos de ronda</span>
+              <strong id="roundPoints">0</strong>
+            </div>
+            <div id="stealBanner" class="steal-banner hidden">ROBO: Equipo <span id="stealTeam">B</span></div>
+          </div>
+        </div>
+
+        <aside class="control">
+          <div class="scoreboard">
+            <div class="scoreboard__team" id="teamABox">
+              <h3 id="teamAName">Equipo A</h3>
+              <div class="score" id="scoreA">0</div>
+              <div class="strikes">Strikes: <span id="strikesA">0</span></div>
+            </div>
+            <div class="scoreboard__team" id="teamBBox">
+              <h3 id="teamBName">Equipo B</h3>
+              <div class="score" id="scoreB">0</div>
+              <div class="strikes">Strikes: <span id="strikesB">0</span></div>
+            </div>
+          </div>
+
+          <div class="control__group">
+            <h4>Equipo activo</h4>
+            <div class="control__row">
+              <button id="setTeamA" class="btn">Activar A</button>
+              <button id="setTeamB" class="btn">Activar B</button>
+            </div>
+          </div>
+
+          <div class="control__group">
+            <h4>Ronda</h4>
+            <div class="control__row">
+              <button id="addStrike" class="btn btn--warning">Strike</button>
+              <button id="resetRound" class="btn">Reiniciar ronda</button>
+            </div>
+            <div class="control__row">
+              <button id="finishRoundA" class="btn btn--primary">Finalizar ronda → A</button>
+              <button id="finishRoundB" class="btn btn--primary">Finalizar ronda → B</button>
+            </div>
+          </div>
+
+          <div class="control__group">
+            <h4>Robo</h4>
+            <div class="control__row">
+              <button id="startSteal" class="btn btn--warning">Robo</button>
+            </div>
+            <div class="control__row">
+              <button id="stealSuccess" class="btn btn--success">Robo ACERTADO</button>
+              <button id="stealFail" class="btn btn--danger">Robo FALLIDO</button>
+            </div>
+          </div>
+
+          <div class="control__group">
+            <h4>Preguntas</h4>
+            <div class="control__row">
+              <button id="prevQuestion" class="btn">Anterior</button>
+              <button id="nextQuestion" class="btn">Siguiente</button>
+            </div>
+          </div>
+
+          <div class="control__group">
+            <h4>Audio</h4>
+            <div class="control__row">
+              <button id="toggleAudio" class="btn">Audio ON/OFF</button>
+              <label class="control__slider">
+                <span>Volumen</span>
+                <input id="volumeSliderGame" type="range" min="0" max="100" value="70" />
+              </label>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <section class="instructions">
+        <h2>Instrucciones rápidas</h2>
+        <ul>
+          <li>Edita <strong>questions.js</strong> para cargar tus preguntas (estructura: <code>const QUESTIONS_DATA = { game, questions }</code>).</li>
+          <li>Coloca tus audios en <strong>assets/audio/</strong>: intro.mp3, correct.mp3, wrong.mp3, reveal.mp3, steal.mp3 (opcionales).</li>
+          <li>Atajos: 1..5 revela/oculta, A/B cambia equipo, S strike, N/P siguiente/anterior, R reinicia ronda, G reset juego, T robo, Y/U robo acertado/fallido.</li>
+        </ul>
+      </section>
+    </div>
+
+    <script src="questions.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

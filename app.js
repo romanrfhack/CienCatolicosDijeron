@@ -23,7 +23,8 @@ const DEFAULT_STATE = {
   viewMode: "normal"
 };
 
-const state = loadState();
+const questions = Array.isArray(QUESTIONS_DATA?.questions) ? QUESTIONS_DATA.questions : [];
+const state = normalizeStateWithQuestions(loadState(), questions);
 const audioManager = createAudioManager();
 
 const elements = {
@@ -73,7 +74,6 @@ const elements = {
   exitFullscreenMode: document.getElementById("exitFullscreenMode")
 };
 
-const questions = Array.isArray(QUESTIONS_DATA?.questions) ? QUESTIONS_DATA.questions : [];
 let curtainTimer = null;
 
 normalizeStateWithQuestions();
@@ -562,6 +562,51 @@ function loadState() {
   } catch (error) {
     return JSON.parse(JSON.stringify(DEFAULT_STATE));
   }
+}
+
+function normalizeStateWithQuestions(loadedState, questionsList) {
+  const normalized = { ...loadedState };
+  const questionCount = Array.isArray(questionsList) ? questionsList.length : 0;
+
+  if (!Number.isInteger(normalized.currentQuestionIndex)) {
+    normalized.currentQuestionIndex = 0;
+  }
+  if (questionCount <= 0) {
+    normalized.currentQuestionIndex = 0;
+  } else if (
+    normalized.currentQuestionIndex < 0 ||
+    normalized.currentQuestionIndex >= questionCount
+  ) {
+    normalized.currentQuestionIndex = 0;
+  }
+
+  if (!Array.isArray(normalized.revealedAnswers) || normalized.revealedAnswers.length !== 5) {
+    normalized.revealedAnswers = Array(5).fill(false);
+  } else {
+    normalized.revealedAnswers = normalized.revealedAnswers
+      .slice(0, 5)
+      .map((value) => Boolean(value));
+  }
+
+  normalized.strikesA = Math.max(0, Math.min(3, Number(normalized.strikesA) || 0));
+  normalized.strikesB = Math.max(0, Math.min(3, Number(normalized.strikesB) || 0));
+  normalized.roundPoints = Math.max(0, Number(normalized.roundPoints) || 0);
+  normalized.stealMode = Boolean(normalized.stealMode);
+
+  if (normalized.activeTeam !== "A" && normalized.activeTeam !== "B") {
+    normalized.activeTeam = DEFAULT_STATE.activeTeam;
+  }
+  if (normalized.roundOwnerTeam !== "A" && normalized.roundOwnerTeam !== "B") {
+    normalized.roundOwnerTeam = normalized.activeTeam;
+  }
+  if (normalized.viewMode !== "normal" && normalized.viewMode !== "question" && normalized.viewMode !== "board") {
+    normalized.viewMode = "normal";
+  }
+  if (!normalized.started) {
+    normalized.viewMode = "normal";
+  }
+
+  return normalized;
 }
 
 function saveState() {

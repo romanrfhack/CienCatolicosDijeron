@@ -23,7 +23,26 @@ const DEFAULT_STATE = {
   viewMode: "normal"
 };
 
+const LOG_PREFIX = "[catolicos]";
+const logInfo = (...args) => console.log(LOG_PREFIX, ...args);
+const logWarn = (...args) => console.warn(LOG_PREFIX, ...args);
+const logError = (...args) => console.error(LOG_PREFIX, ...args);
+
+window.addEventListener("error", (event) => {
+  logError("JS error", event.message, event.error);
+});
+
+window.addEventListener("unhandledrejection", (event) => {
+  logError("Unhandled promise rejection", event.reason);
+});
+
 const questions = Array.isArray(QUESTIONS_DATA?.questions) ? QUESTIONS_DATA.questions : [];
+logInfo("QUESTIONS_DATA cargado", {
+  hasData: Boolean(QUESTIONS_DATA),
+  questionsCount: questions.length,
+  gameMeta: QUESTIONS_DATA?.game || null
+});
+
 const state = normalizeStateWithQuestions(loadState(), questions);
 const audioManager = createAudioManager();
 
@@ -76,11 +95,10 @@ const elements = {
 
 let curtainTimer = null;
 
-normalizeStateWithQuestions();
-
 init();
 
 function init() {
+  logInfo("Inicializando UI", { started: state.started, viewMode: state.viewMode });
   elements.teamAInput.value = state.teamNames.A;
   elements.teamBInput.value = state.teamNames.B;
   elements.audioToggle.checked = state.audio.enabled;
@@ -179,6 +197,13 @@ function updateFullscreenOverlay() {
 
 function render() {
   const question = questions[state.currentQuestionIndex];
+
+  logInfo("Render", {
+    currentQuestionIndex: state.currentQuestionIndex,
+    hasQuestion: Boolean(question),
+    started: state.started,
+    viewMode: state.viewMode
+  });
 
   elements.configScreen.classList.toggle("hidden", state.started);
   elements.gameScreen.classList.toggle("hidden", !state.started);
@@ -517,41 +542,15 @@ function getOppositeTeam(team) {
 }
 
 
-function normalizeStateWithQuestions() {
-  // Ensure index is valid for the current QUESTIONS_DATA (common issue after editing questions.js)
-  if (!Number.isInteger(state.currentQuestionIndex)) {
-    state.currentQuestionIndex = 0;
-  }
-  if (state.currentQuestionIndex < 0) {
-    state.currentQuestionIndex = 0;
-  }
-  if (questions.length > 0 && state.currentQuestionIndex >= questions.length) {
-    state.currentQuestionIndex = 0;
-  }
-
-  // Always enforce exactly 5 reveal slots (board is fixed to 5 answers)
-  const prev = Array.isArray(state.revealedAnswers) ? state.revealedAnswers : [];
-  state.revealedAnswers = Array.from({ length: 5 }, (_, i) => Boolean(prev[i]));
-
-  // Defensive defaults for enums (avoid breaking UI if storage has unexpected values)
-  if (!["A", "B"].includes(state.activeTeam)) {
-    state.activeTeam = "A";
-  }
-  if (!["A", "B"].includes(state.roundOwnerTeam)) {
-    state.roundOwnerTeam = state.activeTeam;
-  }
-  if (!["normal", "question", "board"].includes(state.viewMode)) {
-    state.viewMode = "normal";
-  }
-}
-
 function loadState() {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (!stored) {
+    logInfo("No hay estado en storage, usando valores por defecto.");
     return JSON.parse(JSON.stringify(DEFAULT_STATE));
   }
   try {
     const parsed = JSON.parse(stored);
+    logInfo("Estado cargado desde storage.");
     return {
       ...JSON.parse(JSON.stringify(DEFAULT_STATE)),
       ...parsed,
@@ -560,6 +559,7 @@ function loadState() {
       teamNames: { ...DEFAULT_STATE.teamNames, ...(parsed.teamNames || {}) }
     };
   } catch (error) {
+    logWarn("Estado corrupto en storage, usando default.", error);
     return JSON.parse(JSON.stringify(DEFAULT_STATE));
   }
 }

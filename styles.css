@@ -13,6 +13,16 @@
   --curtain-image: url("assets/intro.jpg");
 }
 
+/*
+  IMPORTANT:
+  El atributo HTML `hidden` puede ser sobre-escrito por reglas CSS del autor.
+  Como usamos overlays con `display: grid`, forzamos el comportamiento estándar
+  para que los overlays realmente desaparezcan cuando están marcados como hidden.
+*/
+[hidden] {
+  display: none !important;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -50,6 +60,54 @@ body.mode-board {
   opacity: 1;
   transform: scale(1);
   pointer-events: all;
+}
+
+.intro-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  display: grid;
+  place-items: center;
+  padding: clamp(20px, 4vw, 60px);
+  background:
+    linear-gradient(rgba(5, 8, 13, 0.70), rgba(5, 8, 13, 0.70)),
+    var(--curtain-image) center / cover no-repeat;
+}
+
+.intro-card {
+  width: min(1000px, 100%);
+  border-radius: 28px;
+  border: 4px solid rgba(255, 255, 255, 0.85);
+  background: rgba(10, 14, 20, 0.55);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+  padding: clamp(28px, 5vw, 64px);
+  text-align: center;
+  display: grid;
+  gap: 18px;
+  backdrop-filter: blur(6px);
+}
+
+.intro-title {
+  font-size: clamp(2.2rem, 5vw, 4.6rem);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+.intro-subtitle {
+  font-size: clamp(1.1rem, 2.4vw, 1.8rem);
+  color: rgba(245, 247, 250, 0.92);
+  font-weight: 600;
+}
+
+.intro-hint {
+  font-size: clamp(0.95rem, 2vw, 1.2rem);
+  color: rgba(245, 247, 250, 0.85);
+}
+
+.btn--xl {
+  padding: 14px 18px;
+  font-size: 1.15rem;
+  border-radius: 14px;
 }
 
 .app {

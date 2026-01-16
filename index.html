@@ -7,6 +7,16 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <!-- Intro (se muestra al cargar, luego pasa a Configuración) -->
+    <div id="introOverlay" class="intro-overlay" hidden>
+      <div class="intro-card">
+        <h1 class="intro-title" id="introTitle">100 Católicos Dijeron</h1>
+        <p class="intro-subtitle" id="introSubtitle">Fiesta Patronal San Sebastián 2026</p>
+        <p class="intro-hint">Presiona ENTER o clic en “Continuar”</p>
+        <button id="enterConfig" class="btn btn--primary btn--xl">Continuar</button>
+      </div>
+    </div>
+
     <div id="curtain" class="curtain" aria-hidden="true"></div>
     <div id="fullscreenOverlay" class="fullscreen-overlay" hidden>
       <div class="fullscreen-card">

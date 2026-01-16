@@ -20,7 +20,8 @@ const DEFAULT_STATE = {
   teamNames: { A: "Equipo A", B: "Equipo B" },
   audio: { enabled: true, volume: 0.7 },
   started: false,
-  viewMode: "normal"
+  viewMode: "normal",
+  setupStage: "intro" // intro -> config -> game
 };
 
 const LOG_PREFIX = "[catolicos]";
@@ -36,96 +37,84 @@ window.addEventListener("unhandledrejection", (event) => {
   logError("Unhandled promise rejection", event.reason);
 });
 
-const questions = Array.isArray(QUESTIONS_DATA?.questions) ? QUESTIONS_DATA.questions : [];
+// IMPORTANT: si questions.js no carga o no define QUESTIONS_DATA, evitar que el script truene.
+const QUESTIONS_DATA_SAFE = typeof QUESTIONS_DATA !== "undefined" ? QUESTIONS_DATA : null;
+const questions = Array.isArray(QUESTIONS_DATA_SAFE?.questions) ? QUESTIONS_DATA_SAFE.questions : [];
 logInfo("QUESTIONS_DATA cargado", {
-  hasData: Boolean(QUESTIONS_DATA),
+  hasData: Boolean(QUESTIONS_DATA_SAFE),
   questionsCount: questions.length,
-  gameMeta: QUESTIONS_DATA?.game || null
+  gameMeta: QUESTIONS_DATA_SAFE?.game || null
 });
 
 const state = normalizeStateWithQuestions(loadState(), questions);
 const audioManager = createAudioManager();
 
-let elements = {};
+const elements = {
+  introOverlay: document.getElementById("introOverlay"),
+  enterConfig: document.getElementById("enterConfig"),
+  introTitle: document.getElementById("introTitle"),
+  introSubtitle: document.getElementById("introSubtitle"),
+  configScreen: document.getElementById("configScreen"),
+  gameScreen: document.getElementById("gameScreen"),
+  curtain: document.getElementById("curtain"),
+  teamAInput: document.getElementById("teamAInput"),
+  teamBInput: document.getElementById("teamBInput"),
+  startGame: document.getElementById("startGame"),
+  questionText: document.getElementById("questionText"),
+  answersGrid: document.getElementById("answersGrid"),
+  roundPoints: document.getElementById("roundPoints"),
+  questionCounter: document.getElementById("questionCounter"),
+  teamAName: document.getElementById("teamAName"),
+  teamBName: document.getElementById("teamBName"),
+  scoreA: document.getElementById("scoreA"),
+  scoreB: document.getElementById("scoreB"),
+  strikesA: document.getElementById("strikesA"),
+  strikesB: document.getElementById("strikesB"),
+  teamABox: document.getElementById("teamABox"),
+  teamBBox: document.getElementById("teamBBox"),
+  setTeamA: document.getElementById("setTeamA"),
+  setTeamB: document.getElementById("setTeamB"),
+  addStrike: document.getElementById("addStrike"),
+  resetRound: document.getElementById("resetRound"),
+  finishRoundA: document.getElementById("finishRoundA"),
+  finishRoundB: document.getElementById("finishRoundB"),
+  startSteal: document.getElementById("startSteal"),
+  stealSuccess: document.getElementById("stealSuccess"),
+  stealFail: document.getElementById("stealFail"),
+  prevQuestion: document.getElementById("prevQuestion"),
+  nextQuestion: document.getElementById("nextQuestion"),
+  resetGame: document.getElementById("resetGame"),
+  stealBanner: document.getElementById("stealBanner"),
+  stealTeam: document.getElementById("stealTeam"),
+  audioToggle: document.getElementById("audioToggle"),
+  volumeSlider: document.getElementById("volumeSlider"),
+  testSound: document.getElementById("testSound"),
+  toggleAudio: document.getElementById("toggleAudio"),
+  volumeSliderGame: document.getElementById("volumeSliderGame"),
+  fullscreenOverlay: document.getElementById("fullscreenOverlay"),
+  fullscreenIntro: document.getElementById("fullscreenIntro"),
+  fullscreenQuestion: document.getElementById("fullscreenQuestion"),
+  fullscreenHint: document.getElementById("fullscreenHint"),
+  showQuestionMode: document.getElementById("showQuestionMode"),
+  toggleBoardMode: document.getElementById("toggleBoardMode"),
+  exitFullscreenMode: document.getElementById("exitFullscreenMode")
+};
 
 let curtainTimer = null;
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", init);
-} else {
-  init();
-}
-
-function getElements() {
-  return {
-    configScreen: document.getElementById("configScreen"),
-    gameScreen: document.getElementById("gameScreen"),
-    curtain: document.getElementById("curtain"),
-    teamAInput: document.getElementById("teamAInput"),
-    teamBInput: document.getElementById("teamBInput"),
-    startGame: document.getElementById("startGame"),
-    questionText: document.getElementById("questionText"),
-    answersGrid: document.getElementById("answersGrid"),
-    roundPoints: document.getElementById("roundPoints"),
-    questionCounter: document.getElementById("questionCounter"),
-    teamAName: document.getElementById("teamAName"),
-    teamBName: document.getElementById("teamBName"),
-    scoreA: document.getElementById("scoreA"),
-    scoreB: document.getElementById("scoreB"),
-    strikesA: document.getElementById("strikesA"),
-    strikesB: document.getElementById("strikesB"),
-    teamABox: document.getElementById("teamABox"),
-    teamBBox: document.getElementById("teamBBox"),
-    setTeamA: document.getElementById("setTeamA"),
-    setTeamB: document.getElementById("setTeamB"),
-    addStrike: document.getElementById("addStrike"),
-    resetRound: document.getElementById("resetRound"),
-    finishRoundA: document.getElementById("finishRoundA"),
-    finishRoundB: document.getElementById("finishRoundB"),
-    startSteal: document.getElementById("startSteal"),
-    stealSuccess: document.getElementById("stealSuccess"),
-    stealFail: document.getElementById("stealFail"),
-    prevQuestion: document.getElementById("prevQuestion"),
-    nextQuestion: document.getElementById("nextQuestion"),
-    resetGame: document.getElementById("resetGame"),
-    stealBanner: document.getElementById("stealBanner"),
-    stealTeam: document.getElementById("stealTeam"),
-    audioToggle: document.getElementById("audioToggle"),
-    volumeSlider: document.getElementById("volumeSlider"),
-    testSound: document.getElementById("testSound"),
-    toggleAudio: document.getElementById("toggleAudio"),
-    volumeSliderGame: document.getElementById("volumeSliderGame"),
-    fullscreenOverlay: document.getElementById("fullscreenOverlay"),
-    fullscreenIntro: document.getElementById("fullscreenIntro"),
-    fullscreenQuestion: document.getElementById("fullscreenQuestion"),
-    fullscreenHint: document.getElementById("fullscreenHint"),
-    showQuestionMode: document.getElementById("showQuestionMode"),
-    toggleBoardMode: document.getElementById("toggleBoardMode"),
-    exitFullscreenMode: document.getElementById("exitFullscreenMode")
-  };
-}
-
-function logMissingElements(missingKeys) {
-  if (!missingKeys.length) {
-    return;
-  }
-  logError("Faltan elementos en el DOM. Verifica que los IDs existan en index.html.", {
-    missingKeys,
-    readyState: document.readyState
-  });
-}
+init();
 
 function init() {
-  elements = getElements();
-  const missingKeys = Object.entries(elements)
-    .filter(([, value]) => !value)
-    .map(([key]) => key);
-  logMissingElements(missingKeys);
-  if (missingKeys.length) {
-    return;
+  logInfo("Inicializando UI", { started: state.started, viewMode: state.viewMode });
+
+  // Personaliza texto del intro si viene en QUESTIONS_DATA.game
+  if (elements.introTitle && QUESTIONS_DATA_SAFE?.game?.title) {
+    elements.introTitle.textContent = QUESTIONS_DATA_SAFE.game.title;
+  }
+  if (elements.introSubtitle && QUESTIONS_DATA_SAFE?.game?.subtitle) {
+    elements.introSubtitle.textContent = QUESTIONS_DATA_SAFE.game.subtitle;
   }
 
-  logInfo("Inicializando UI", { started: state.started, viewMode: state.viewMode });
   elements.teamAInput.value = state.teamNames.A;
   elements.teamBInput.value = state.teamNames.B;
   elements.audioToggle.checked = state.audio.enabled;
@@ -134,9 +123,15 @@ function init() {
 
   if (!state.started) {
     state.viewMode = "normal";
+    if (state.setupStage !== "intro" && state.setupStage !== "config") {
+      state.setupStage = "intro";
+    }
+  } else {
+    state.setupStage = "config";
   }
 
   elements.startGame.addEventListener("click", handleStart);
+  elements.enterConfig?.addEventListener("click", proceedToConfig);
   elements.setTeamA.addEventListener("click", () => setActiveTeam("A"));
   elements.setTeamB.addEventListener("click", () => setActiveTeam("B"));
   elements.addStrike.addEventListener("click", addStrike);
@@ -173,16 +168,24 @@ function init() {
   render();
 }
 
+function proceedToConfig() {
+  state.setupStage = "config";
+  logInfo("Intro -> Config", { setupStage: state.setupStage });
+  saveState();
+  render();
+}
+
 function handleStart() {
   state.teamNames.A = elements.teamAInput.value.trim() || "Equipo A";
   state.teamNames.B = elements.teamBInput.value.trim() || "Equipo B";
   state.started = true;
   state.roundOwnerTeam = state.activeTeam;
-  logInfo("Juego iniciado", { teamA: state.teamNames.A, teamB: state.teamNames.B });
+  state.setupStage = "config";
   audioManager.play("intro", { once: true });
-  showCurtain({ autoHide: true });
+  logInfo("Juego iniciado", { started: state.started, viewMode: "question" });
   saveState();
-  render();
+  // Al iniciar, mostramos la pregunta en modo 'question' (pantalla completa).
+  setViewMode("question", { skipSound: true });
 }
 
 function setViewMode(mode, { skipSound = false } = {}) {
@@ -233,12 +236,14 @@ function render() {
     viewMode: state.viewMode
   });
 
-  elements.configScreen.classList.toggle("hidden", state.started);
+  const showIntro = !state.started && state.setupStage === "intro";
+  if (elements.introOverlay) {
+    elements.introOverlay.hidden = !showIntro;
+  }
+
+  const showConfig = !state.started && !showIntro;
+  elements.configScreen.classList.toggle("hidden", !showConfig);
   elements.gameScreen.classList.toggle("hidden", !state.started);
-  logInfo("Pantallas", {
-    configHidden: elements.configScreen.classList.contains("hidden"),
-    gameHidden: elements.gameScreen.classList.contains("hidden")
-  });
 
   elements.teamAName.textContent = state.teamNames.A;
   elements.teamBName.textContent = state.teamNames.B;
@@ -486,6 +491,15 @@ function handleKeyDown(event) {
 
   const key = event.key.toLowerCase();
 
+  // Intro: ENTER/ESPACIO para pasar a Configuración
+  if (!state.started && state.setupStage === "intro") {
+    if (key === "enter" || event.code === "Enter" || key === " " || event.code === "Space") {
+      event.preventDefault();
+      proceedToConfig();
+    }
+    return;
+  }
+
   if (key === "escape") {
     setViewMode("normal");
     return;
@@ -636,6 +650,13 @@ function normalizeStateWithQuestions(loadedState, questionsList) {
   }
   if (!normalized.started) {
     normalized.viewMode = "normal";
+  }
+
+  if (normalized.setupStage !== "intro" && normalized.setupStage !== "config") {
+    normalized.setupStage = normalized.started ? "config" : "intro";
+  }
+  if (normalized.started) {
+    normalized.setupStage = "config";
   }
 
   return normalized;

@@ -46,58 +46,85 @@ logInfo("QUESTIONS_DATA cargado", {
 const state = normalizeStateWithQuestions(loadState(), questions);
 const audioManager = createAudioManager();
 
-const elements = {
-  configScreen: document.getElementById("configScreen"),
-  gameScreen: document.getElementById("gameScreen"),
-  curtain: document.getElementById("curtain"),
-  teamAInput: document.getElementById("teamAInput"),
-  teamBInput: document.getElementById("teamBInput"),
-  startGame: document.getElementById("startGame"),
-  questionText: document.getElementById("questionText"),
-  answersGrid: document.getElementById("answersGrid"),
-  roundPoints: document.getElementById("roundPoints"),
-  questionCounter: document.getElementById("questionCounter"),
-  teamAName: document.getElementById("teamAName"),
-  teamBName: document.getElementById("teamBName"),
-  scoreA: document.getElementById("scoreA"),
-  scoreB: document.getElementById("scoreB"),
-  strikesA: document.getElementById("strikesA"),
-  strikesB: document.getElementById("strikesB"),
-  teamABox: document.getElementById("teamABox"),
-  teamBBox: document.getElementById("teamBBox"),
-  setTeamA: document.getElementById("setTeamA"),
-  setTeamB: document.getElementById("setTeamB"),
-  addStrike: document.getElementById("addStrike"),
-  resetRound: document.getElementById("resetRound"),
-  finishRoundA: document.getElementById("finishRoundA"),
-  finishRoundB: document.getElementById("finishRoundB"),
-  startSteal: document.getElementById("startSteal"),
-  stealSuccess: document.getElementById("stealSuccess"),
-  stealFail: document.getElementById("stealFail"),
-  prevQuestion: document.getElementById("prevQuestion"),
-  nextQuestion: document.getElementById("nextQuestion"),
-  resetGame: document.getElementById("resetGame"),
-  stealBanner: document.getElementById("stealBanner"),
-  stealTeam: document.getElementById("stealTeam"),
-  audioToggle: document.getElementById("audioToggle"),
-  volumeSlider: document.getElementById("volumeSlider"),
-  testSound: document.getElementById("testSound"),
-  toggleAudio: document.getElementById("toggleAudio"),
-  volumeSliderGame: document.getElementById("volumeSliderGame"),
-  fullscreenOverlay: document.getElementById("fullscreenOverlay"),
-  fullscreenIntro: document.getElementById("fullscreenIntro"),
-  fullscreenQuestion: document.getElementById("fullscreenQuestion"),
-  fullscreenHint: document.getElementById("fullscreenHint"),
-  showQuestionMode: document.getElementById("showQuestionMode"),
-  toggleBoardMode: document.getElementById("toggleBoardMode"),
-  exitFullscreenMode: document.getElementById("exitFullscreenMode")
-};
+let elements = {};
 
 let curtainTimer = null;
 
-init();
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
+
+function getElements() {
+  return {
+    configScreen: document.getElementById("configScreen"),
+    gameScreen: document.getElementById("gameScreen"),
+    curtain: document.getElementById("curtain"),
+    teamAInput: document.getElementById("teamAInput"),
+    teamBInput: document.getElementById("teamBInput"),
+    startGame: document.getElementById("startGame"),
+    questionText: document.getElementById("questionText"),
+    answersGrid: document.getElementById("answersGrid"),
+    roundPoints: document.getElementById("roundPoints"),
+    questionCounter: document.getElementById("questionCounter"),
+    teamAName: document.getElementById("teamAName"),
+    teamBName: document.getElementById("teamBName"),
+    scoreA: document.getElementById("scoreA"),
+    scoreB: document.getElementById("scoreB"),
+    strikesA: document.getElementById("strikesA"),
+    strikesB: document.getElementById("strikesB"),
+    teamABox: document.getElementById("teamABox"),
+    teamBBox: document.getElementById("teamBBox"),
+    setTeamA: document.getElementById("setTeamA"),
+    setTeamB: document.getElementById("setTeamB"),
+    addStrike: document.getElementById("addStrike"),
+    resetRound: document.getElementById("resetRound"),
+    finishRoundA: document.getElementById("finishRoundA"),
+    finishRoundB: document.getElementById("finishRoundB"),
+    startSteal: document.getElementById("startSteal"),
+    stealSuccess: document.getElementById("stealSuccess"),
+    stealFail: document.getElementById("stealFail"),
+    prevQuestion: document.getElementById("prevQuestion"),
+    nextQuestion: document.getElementById("nextQuestion"),
+    resetGame: document.getElementById("resetGame"),
+    stealBanner: document.getElementById("stealBanner"),
+    stealTeam: document.getElementById("stealTeam"),
+    audioToggle: document.getElementById("audioToggle"),
+    volumeSlider: document.getElementById("volumeSlider"),
+    testSound: document.getElementById("testSound"),
+    toggleAudio: document.getElementById("toggleAudio"),
+    volumeSliderGame: document.getElementById("volumeSliderGame"),
+    fullscreenOverlay: document.getElementById("fullscreenOverlay"),
+    fullscreenIntro: document.getElementById("fullscreenIntro"),
+    fullscreenQuestion: document.getElementById("fullscreenQuestion"),
+    fullscreenHint: document.getElementById("fullscreenHint"),
+    showQuestionMode: document.getElementById("showQuestionMode"),
+    toggleBoardMode: document.getElementById("toggleBoardMode"),
+    exitFullscreenMode: document.getElementById("exitFullscreenMode")
+  };
+}
+
+function logMissingElements(missingKeys) {
+  if (!missingKeys.length) {
+    return;
+  }
+  logError("Faltan elementos en el DOM. Verifica que los IDs existan en index.html.", {
+    missingKeys,
+    readyState: document.readyState
+  });
+}
 
 function init() {
+  elements = getElements();
+  const missingKeys = Object.entries(elements)
+    .filter(([, value]) => !value)
+    .map(([key]) => key);
+  logMissingElements(missingKeys);
+  if (missingKeys.length) {
+    return;
+  }
+
   logInfo("Inicializando UI", { started: state.started, viewMode: state.viewMode });
   elements.teamAInput.value = state.teamNames.A;
   elements.teamBInput.value = state.teamNames.B;
@@ -151,6 +178,7 @@ function handleStart() {
   state.teamNames.B = elements.teamBInput.value.trim() || "Equipo B";
   state.started = true;
   state.roundOwnerTeam = state.activeTeam;
+  logInfo("Juego iniciado", { teamA: state.teamNames.A, teamB: state.teamNames.B });
   audioManager.play("intro", { once: true });
   showCurtain({ autoHide: true });
   saveState();
@@ -207,6 +235,10 @@ function render() {
 
   elements.configScreen.classList.toggle("hidden", state.started);
   elements.gameScreen.classList.toggle("hidden", !state.started);
+  logInfo("Pantallas", {
+    configHidden: elements.configScreen.classList.contains("hidden"),
+    gameHidden: elements.gameScreen.classList.contains("hidden")
+  });
 
   elements.teamAName.textContent = state.teamNames.A;
   elements.teamBName.textContent = state.teamNames.B;

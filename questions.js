@@ -17,7 +17,7 @@ const QUESTIONS_DATA = {
     },
     {
       id: 2,
-      prompt: "Menciona un fruto que esperas al contemplar al Cristo sufriente.",
+      prompt: "Menciona un fruto que esperas al contemplar a Cristo sufriente.",
       answers: [
         { text: "Esperanza", points: 30 },
         { text: "Paz interior", points: 25 },

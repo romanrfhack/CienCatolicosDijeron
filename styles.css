@@ -340,8 +340,10 @@ input[type="range"] {
   flex: 1;
   height: 0;
   border-bottom: 5px dotted rgba(255, 206, 58, 0.9);
-  transform: translateY(4px);
+  transform: translateY(4px) scaleX(1);
+  transform-origin: left center;
   opacity: 0.9;
+  transition: transform 0.45s ease, opacity 0.45s ease;
 }
 
 .answer-row__points {
@@ -356,6 +358,11 @@ input[type="range"] {
 .answer-row:not(.revealed) .answer-row__text,
 .answer-row:not(.revealed) .answer-row__points {
   visibility: hidden;
+}
+
+.answer-row:not(.revealed) .answer-row__fill {
+  opacity: 0;
+  transform: translateY(4px) scaleX(0);
 }
 
 /* Optional: a subtle "reveal" glow */
